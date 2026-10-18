@@ -1,7 +1,12 @@
+#=
+Example 2. RC filter
+=#
+
 using Symbolics
 using MNA
 
-@variables Vi R C s
+@variables R C
+@variables Vi s
 
 elements = [
     VoltageSource(:V1, ("Vin", 0), Vi),
