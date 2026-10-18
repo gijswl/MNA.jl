@@ -7,7 +7,7 @@ The node name `0` is reserved for global ground and must be present at least onc
 """
 struct Circuit
     elements::Vector{<:AbstractElement}
-    unknowns::Dict{Symbol,Int}
+    unknowns::Dict{Symbol, Int}
     nvoltages::Int
     ncurrents::Int
 
@@ -17,11 +17,11 @@ struct Circuit
 
         unknowns = merge(
             Dict(Symbol(0) => 0),
-            Dict([u for u ∈ zip(voltages, 1:nvoltages)]),
-            Dict([u for u ∈ zip(currents, nvoltages+1:nvoltages+ncurrents)])
+            Dict([u for u in zip(voltages, 1:nvoltages)]),
+            Dict([u for u in zip(currents, (nvoltages + 1):(nvoltages + ncurrents))])
         )
 
-        new(elements, unknowns, nvoltages, ncurrents)
+        return new(elements, unknowns, nvoltages, ncurrents)
     end
 end
 
@@ -56,7 +56,7 @@ The list is sorted, contains only unique entries, and does not contain the symbo
 """
 function process_voltages(elements::Vector{<:AbstractElement})
     nodes = Symbol[]
-    for element ∈ elements
+    for element in elements
         append!(nodes, element.nodes)
     end
 
@@ -78,8 +78,8 @@ The list is sorted and formatted as `[element.name]_i[idx]`, where `idx = 1,...,
 """
 function process_currents(elements::Vector{<:AbstractElement})
     currents = Symbol[]
-    for element ∈ elements
-        for i ∈ 1:num_currents(element)
+    for element in elements
+        for i in 1:num_currents(element)
             push!(currents, Symbol(element.name, "_i", i))
         end
     end

@@ -11,7 +11,7 @@ using MNA
 elements = [
     VoltageSource(:V1, ("Vin", 0), Vi),
     Resistance(:R1, ("Vin", "Vout"), R),
-    Capacitance(:C1, ("Vout", 0), C)
+    Capacitance(:C1, ("Vout", 0), C),
 ]
 
 circuit = Circuit(elements)

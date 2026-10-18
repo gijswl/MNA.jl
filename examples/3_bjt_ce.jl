@@ -16,7 +16,7 @@ elements = [
     Resistance(:rπ, ("b", 1), rπ),
     CCCS(:CCCS1, (1, "c", "e", "e"), β),
     Resistance(:RE, ("e", 0), RE),
-    Resistance(:RC, ("c", 0), RC)
+    Resistance(:RC, ("c", 0), RC),
 ]
 
 circuit = Circuit(elements)
@@ -38,14 +38,14 @@ elements = [
     CCCS(:CCCS1, (1, "c", "e", "e"), β),
     Resistance(:RE, ("e", 0), RE),
     Resistance(:RC, ("c", 0), RC),
-    ShortCircuit(:Iout, ("c", 0))
+    ShortCircuit(:Iout, ("c", 0)),
 ]
 
 circuit = Circuit(elements)
 A, b = assemble(circuit, s)
 
 gi = MNA.cramer_solve(A, b, circuit, "Iout_i1") / -Iin
-gi = simplify(gi; expand = true) 
+gi = simplify(gi; expand = true)
 
 ## Sanity check
 gv_analytic = expand(-β * RC / (rπ + (β + 1) * RE))

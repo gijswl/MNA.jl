@@ -9,12 +9,12 @@ function assemble(circuit::Circuit, s::Any)
     A = zeros(typeof(s), N, N)
     b = zeros(typeof(s), N)
 
-    for element ∈ circuit.elements
+    for element in circuit.elements
         A_, b_ = stamp(element, s)
 
         # Translate unknown names to indices of the system matrix
         unames = collect(element.nodes)
-        for i ∈ 1:num_currents(element)
+        for i in 1:num_currents(element)
             push!(unames, Symbol(element.name, "_i", i))
         end
         idx = get_unknown_idx(circuit, unames)
@@ -24,11 +24,11 @@ function assemble(circuit::Circuit, s::Any)
         idx = idx[nonzeros]
         A_ = A_[nonzeros, nonzeros]
         b_ = b_[nonzeros]
-        
+
         # Add element-wise to avoid issues with duplicate indices.
         #  e.g., the contribution of a resistance connected with both pins to the same node should cancel.
-        for (i, x) ∈ enumerate(idx)
-            for (j, y) ∈ enumerate(idx)
+        for (i, x) in enumerate(idx)
+            for (j, y) in enumerate(idx)
                 A[x, y] += A_[i, j]
             end
             b[x] += b_[i]

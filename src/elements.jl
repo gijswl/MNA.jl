@@ -55,7 +55,7 @@ num_currents(::CurrentSource) = 0
 function stamp(element::CurrentSource, ::Any)
     Io = element.value
     A = zeros(2, 2)
-    b =  [
+    b = [
         +Io;
         -Io
     ]
@@ -81,10 +81,10 @@ num_currents(::VoltageSource) = 1 # i1 = Iin
 
 function stamp(element::VoltageSource, ::Any)
     Uo = element.value
-    A = [ 
+    A = [
         0  0 +1;
         0  0 -1;
-       +1 -1  0 
+        +1 -1  0
     ]
     b = [
         0;
@@ -115,11 +115,11 @@ num_currents(::VCCS) = 1 # i1 = Iout
 function stamp(element::VCCS, ::Any)
     G = element.value
     A = [
-         0  0  0  0  0;
-         0  0  0  0 +1;
-         0  0  0  0 -1;
-         0  0  0  0  0;
-        +1  0  0 -1 -1/G
+        0  0  0  0  0;
+        0  0  0  0 +1;
+        0  0  0  0 -1;
+        0  0  0  0  0;
+        +1  0  0 -1 -1 / G
     ]
     b = zeros(5)
 
@@ -146,10 +146,10 @@ num_currents(::VCVS) = 1 # i1 = Iout
 function stamp(element::VCVS, ::Any)
     G = element.value
     A = [
-         0  0  0  0  0;
-         0  0  0  0 +1;
-         0  0  0  0 -1;
-         0  0  0  0  0;
+        0  0  0  0  0;
+        0  0  0  0 +1;
+        0  0  0  0 -1;
+        0  0  0  0  0;
         +G -1 +1 -G  0
     ]
     b = zeros(5)
@@ -177,10 +177,10 @@ num_currents(::CCCS) = 1 # i1 = Iout
 function stamp(element::CCCS, ::Any)
     G = element.value
     A = [
-         0  0  0  0 +1/G;
-         0  0  0  0 +1;
-         0  0  0  0 -1;
-         0  0  0  0 -1/G;
+        0  0  0  0 +1 / G;
+        0  0  0  0 +1;
+        0  0  0  0 -1;
+        0  0  0  0 -1 / G;
         +1  0  0 -1  0
     ]
     b = zeros(5)
@@ -208,11 +208,11 @@ num_currents(::CCVS) = 2 # i1 = Iin, i2 = Iout
 function stamp(element::CCVS, ::Any)
     G = element.value
     A = [
-         0  0  0  0 +1  0;
-         0  0  0  0  0 +1;
-         0  0  0  0  0 -1;
-         0  0  0  0 -1  0;
-         0 +1 -1  0 -G  0;
+        0  0  0  0 +1  0;
+        0  0  0  0  0 +1;
+        0  0  0  0  0 -1;
+        0  0  0  0 -1  0;
+        0 +1 -1  0 -G  0;
         +1  0  0 -1  0  0
     ]
     b = zeros(6)
@@ -233,8 +233,8 @@ num_currents(::AbstractAdmittance) = 0
 
 function stamp(element::AbstractAdmittance, s)
     Y = admittance(element, s)
-    A =  [
-        +Y -Y; 
+    A = [
+        +Y -Y;
         -Y +Y
     ]
     b = zeros(2)
@@ -372,10 +372,10 @@ num_currents(::Transformer) = 1 # i1 = It
 function stamp(element::Transformer, ::Any)
     T = element.value
     A = [
-         0  0  0  0 +1;
-         0  0  0  0 -T;
-         0  0  0  0 +T;
-         0  0  0  0 -1;
+        0  0  0  0 +1;
+        0  0  0  0 -T;
+        0  0  0  0 +T;
+        0  0  0  0 -1;
         +1 -T +T -1  0
     ]
     b = zeros(5)
