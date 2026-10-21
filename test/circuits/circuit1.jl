@@ -1,7 +1,7 @@
 ## Circuit definition
 V1 = 1
-R1 = 1e3
-R2 = 2e3
+R1 = 1.0e3
+R2 = 2.0e3
 
 elements = [
     VoltageSource(:V1, ("Vin", 0), V1),
@@ -15,5 +15,8 @@ circuit = Circuit(elements)
 expected_size = 3 # 2 nodes + 1 branch current
 expected_unknowns = [
     "Vin", "Vout", # 2 nodes
-    "V1_i1" # 1 branch current
+    "V1_i1", # 1 branch current
 ]
+
+output_var = "Vout"
+expected_output = R2 * V1 / (R1 + R2)
