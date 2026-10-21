@@ -20,7 +20,7 @@ function assemble(circuit::Circuit, s::Any)
         idx = get_unknown_idx(circuit, unames)
 
         # Handle the ground node by discarding all matrix entries assigned to position 0.
-        nonzeros = ispositive.(idx)
+        nonzeros = idx .> 0
         idx = idx[nonzeros]
         A_ = A_[nonzeros, nonzeros]
         b_ = b_[nonzeros]
