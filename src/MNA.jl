@@ -16,7 +16,7 @@ include("circuit.jl")
 export assemble
 include("matrix.jl")
 
-export transfer_function
+export transfer_function, coefficients
 include("transfer.jl")
 
 end # module MNA
