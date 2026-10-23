@@ -1,4 +1,5 @@
 using MNA
+using Symbolics
 using Test
 
 include("test_elements.jl")

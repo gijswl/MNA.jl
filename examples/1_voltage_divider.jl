@@ -15,7 +15,7 @@ elements = [
 ]
 
 circuit = Circuit(elements)
-A, b = assemble(circuit, 0; var_type = Num)
+A, b = assemble(circuit, 0.0)
 
 H = transfer_function(A, b, circuit, "Vin", "Vout")
 H = simplify(H, expand = true)

@@ -20,13 +20,13 @@ elements = [
 ]
 
 circuit = Circuit(elements)
-A, b = assemble(circuit, 0; var_type = Num)
+A, b = assemble(circuit, 0.0)
 
 gv = transfer_function(A, b, circuit, "b", "c")
 gv = simplify(gv; expand = true)
 
 ## Input impedance
-rin = -transfer_function(A, b, circuit, "Vin_i1", "b")
+rin = -transfer_function(A, b, circuit, "Vin_I", "b")
 rin = simplify(rin; expand = true)
 
 ## Current gain
@@ -42,9 +42,9 @@ elements = [
 ]
 
 circuit = Circuit(elements)
-A, b = assemble(circuit, 0; var_type = Num)
+A, b = assemble(circuit, 0.0)
 
-gi = MNA.cramer_solve(A, b, circuit, "Iout_i1") / -Iin
+gi = MNA.cramer_solve(A, b, circuit, "Iout_I") / -Iin
 gi = simplify(gi; expand = true)
 
 ## Sanity check

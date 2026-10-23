@@ -79,8 +79,8 @@ The list is sorted and formatted as `[element.name]_i[idx]`, where `idx = 1,...,
 function process_currents(elements::Vector{<:AbstractElement})
     currents = Symbol[]
     for element in elements
-        for i in 1:num_currents(element)
-            push!(currents, Symbol(element.name, "_i", i))
+        for current_name in current_names(element)
+            push!(currents, Symbol(element.name, "_", current_name))
         end
     end
 

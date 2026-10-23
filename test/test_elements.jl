@@ -30,6 +30,9 @@ nodes = [
             @test el.nodes[i] == Symbol(el_nodes[i])
         end
 
+        # Check branch unknowns
+        @test length(MNA.current_names(el)) == MNA.num_currents(el)
+
         # Check stamp size against number of unknowns
         stamp_size = nnodes + MNA.num_currents(el)
         A, b = MNA.stamp(el, 1.0e3 * rand())

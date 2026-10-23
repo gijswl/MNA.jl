@@ -1,26 +1,23 @@
 ## Circuit definition
-Vin = 1
-rπ = 1.0e3
-RE = 2.2e3
-RC = 10.0e3
-β = 150
+V1 = 1.0
+@variables R C s
+
+frequency = s
 
 elements = [
-    VoltageSource(:Vin, ("b", 0), Vin),
-    Resistance(:rπ, ("b", 1), rπ),
-    CCCS(:CCCS1, (1, "c", "e", "e"), β),
-    Resistance(:RE, ("e", 0), RE),
-    Resistance(:RC, ("c", 0), RC),
+    VoltageSource(:V1, ("Vin", 0), V1),
+    Resistance(:R1, ("Vin", "Vout"), R),
+    Capacitance(:C1, ("Vout", 0), C),
 ]
 
 circuit = Circuit(elements)
 
 ## Ground truth
-expected_size = 6 # 4 nodes + 2 branch currents
+expected_size = 3 # 2 nodes + 1 branch current
 expected_unknowns = [
-    1, "b", "c", "e", # 4 nodes
-    "CCCS1_i1", "Vin_i1", # 2 branch currents
+    "Vin", "Vout", # 2 nodes
+    "V1_I", # 1 branch current
 ]
 
-output_var = "c"
-expected_output = -β * RC / (rπ + (β + 1) * RE)
+output_var = "Vout"
+expected_output = V1 / (1 + s * R * C)

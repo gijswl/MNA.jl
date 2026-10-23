@@ -1,22 +1,23 @@
 """
-    assemble(circuit::Circuit, s::Any; var_type = typeof(s))
+    assemble(circuit::Circuit, s)
 
 Assemble the system matrix `[A]{u} = {b}` at complex frequency `s`.
-The matrices' element type is `var_type`, which is the same as `s` by default and can be changed manually.
 """
-function assemble(circuit::Circuit, s::Any; var_type = typeof(s))
+function assemble(circuit::Circuit, s::S) where {S}
     N = size(circuit)
 
-    A = zeros(var_type, N, N)
-    b = zeros(var_type, N)
+    T = promote_type(map(valuetype, circuit.elements)...)
+    T = promote_type(T, S)
+    A = zeros(T, N, N)
+    b = zeros(T, N)
 
     for element in circuit.elements
         A_, b_ = stamp(element, s)
 
         # Translate unknown names to indices of the system matrix
         unames = collect(element.nodes)
-        for i in 1:num_currents(element)
-            push!(unames, Symbol(element.name, "_i", i))
+        for current_name in current_names(element)
+            push!(unames, Symbol(element.name, "_", current_name))
         end
         idx = get_unknown_idx(circuit, unames)
 

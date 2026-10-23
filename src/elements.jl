@@ -1,16 +1,38 @@
 """
-    AbstractElement{T}
+    AbstractElement{T,N,M}
 
 Abstract type for circuit elements. MNA stamps are defined per element type.
+`T` encodes the value type, `N` is the number of nodes, and `M` the number of branch currents.
 """
-abstract type AbstractElement{T} end
+abstract type AbstractElement{T, N, M} end
+
+"""
+    valuetype(element::AbstractElement)
+
+Return the type of `element.value`.
+"""
+valuetype(::AbstractElement{T}) where {T} = T
+
+"""
+    num_voltages(element::AbstractElement)
+
+Return the number of voltage unknowns (nodes) associated with the element.
+"""
+num_voltages(::AbstractElement{T, N, M}) where {T, N, M} = N
 
 """
     num_currents(element::AbstractElement)
 
 Return the number of current unknowns associated with the element.
 """
-function num_currents end
+num_currents(::AbstractElement{T, N, M}) where {T, N, M} = M
+
+"""
+    current_names(element::AbstractElement)
+
+Return the names of the current unknowns associated with the element.
+"""
+current_names(::AbstractElement) = ()
 
 """
     stamp(element::AbstractElement, s)
@@ -21,34 +43,27 @@ with `n` the number of voltage unknowns (nodes) and `m` the number of current un
 """
 function stamp end
 
-"""
-    valuetype(element::AbstractElement)
-
-Return the type of `element.value`.
-"""
-valuetype(::AbstractElement{T}) where {T} = T
-
 ## Sources
 """
-    AbstractSource{T} <: AbstractElement{T}
+    AbstractSource <: AbstractElement
 
 Abstract type for sources (e.g., of voltage and current).
 """
-abstract type AbstractSource{T} <: AbstractElement{T} end
+abstract type AbstractSource{T, N, M} <: AbstractElement{T, N, M} end
 
 """
     AbstractControlledSource{T} <: AbstractSource{T}
 
 Abstract type for sources controlled by circuit variables.
 """
-abstract type AbstractControlledSource{T} <: AbstractSource{T} end
+abstract type AbstractControlledSource{T, N, M} <: AbstractSource{T, N, M} end
 
 """
     CurrentSource{T} <: AbstractSource{T}
 
 Current source `Io` flowing into node 1 and out of node 2.
 """
-struct CurrentSource{T} <: AbstractSource{T}
+struct CurrentSource{T} <: AbstractSource{T, 2, 0}
     name::Symbol
     nodes::NTuple{2, Symbol}
     value::T
@@ -59,12 +74,10 @@ struct CurrentSource{T} <: AbstractSource{T}
     end
 end
 
-num_currents(::CurrentSource) = 0
-
-function stamp(element::CurrentSource, ::Any)
+function stamp(element::CurrentSource{T}, ::Any) where {T}
     Io = element.value
-    A = zeros(2, 2)
-    b = [
+    A = zeros(T, 2, 2)
+    b = T[
         +Io;
         -Io
     ]
@@ -73,12 +86,12 @@ function stamp(element::CurrentSource, ::Any)
 end
 
 """
-    VoltageSource{T} <: AbstractSource{T}
+    VoltageSource <: AbstractSource
 
 Voltage source `Uo` across node 1 to node 2.
-Current unknown `Iout` flows into node 1 and out of node 2. 
+Current unknown `I` flows into node 1 and out of node 2. 
 """
-struct VoltageSource{T} <: AbstractSource{T}
+struct VoltageSource{T} <: AbstractSource{T, 2, 1}
     name::Symbol
     nodes::NTuple{2, Symbol}
     value::T
@@ -89,16 +102,16 @@ struct VoltageSource{T} <: AbstractSource{T}
     end
 end
 
-num_currents(::VoltageSource) = 1 # i1 = Iin
+current_names(::VoltageSource) = (:I,)
 
-function stamp(element::VoltageSource, ::Any)
+function stamp(element::VoltageSource{T}, ::Any) where {T}
     Uo = element.value
-    A = [
+    A = T[
         0  0 +1;
         0  0 -1;
         +1 -1  0
     ]
-    b = [
+    b = T[
         0;
         0;
         Uo
@@ -108,13 +121,13 @@ function stamp(element::VoltageSource, ::Any)
 end
 
 """
-    VCCS{T} <: AbstractControlledSource{T}
+    VCCS <: AbstractControlledSource
 
 Voltage-controlled current source `Iout = G Uin`.
 `Uin` is measured across node 1 to node 4.
 Current unknown `Iout` flows into node 2 and out of node 3.
 """
-struct VCCS{T} <: AbstractControlledSource{T}
+struct VCCS{T} <: AbstractControlledSource{T, 4, 1}
     name::Symbol
     nodes::NTuple{4, Symbol}
     value::T
@@ -125,30 +138,30 @@ struct VCCS{T} <: AbstractControlledSource{T}
     end
 end
 
-num_currents(::VCCS) = 1 # i1 = Iout
+current_names(::VCCS) = (:Iout,)
 
-function stamp(element::VCCS, ::Any)
+function stamp(element::VCCS{T}, ::Any) where {T}
     G = element.value
-    A = [
+    A = T[
         0  0  0  0  0;
         0  0  0  0 +1;
         0  0  0  0 -1;
         0  0  0  0  0;
         +1  0  0 -1 -1 / G
     ]
-    b = zeros(5)
+    b = zeros(T, 5)
 
     return A, b
 end
 
 """
-    VCVS{T} <: AbstractControlledSource{T}
+    VCVS <: AbstractControlledSource
 
 Voltage-controlled voltage source `Uout = G Uin`.
 `Uin` is measured across node 1 to node 4, `Uout` is generated across node 2 to node 3.
 Current unknown `Iout` flows into node 2 and out of node 3.
 """
-struct VCVS{T} <: AbstractControlledSource{T}
+struct VCVS{T} <: AbstractControlledSource{T, 4, 1}
     name::Symbol
     nodes::NTuple{4, Symbol}
     value::T
@@ -159,30 +172,30 @@ struct VCVS{T} <: AbstractControlledSource{T}
     end
 end
 
-num_currents(::VCVS) = 1 # i1 = Iout
+current_names(::VCVS) = (:Iout,)
 
-function stamp(element::VCVS, ::Any)
+function stamp(element::VCVS{T}, ::Any) where {T}
     G = element.value
-    A = [
+    A = T[
         0  0  0  0  0;
         0  0  0  0 +1;
         0  0  0  0 -1;
         0  0  0  0  0;
         +G -1 +1 -G  0
     ]
-    b = zeros(5)
+    b = zeros(T, 5)
 
     return A, b
 end
 
 """
-    CCCS{T} <: AbstractControlledSource{T}
+    CCCS <: AbstractControlledSource
 
 Current-controlled current source `Iout = G Iin`.
 `Iin` is measured through into node 1 and out of node 4.
 Current unknown `Iout` flows into node 2 and out of node 3.
 """
-struct CCCS{T} <: AbstractControlledSource{T}
+struct CCCS{T} <: AbstractControlledSource{T, 4, 1}
     name::Symbol
     nodes::NTuple{4, Symbol}
     value::T
@@ -193,30 +206,30 @@ struct CCCS{T} <: AbstractControlledSource{T}
     end
 end
 
-num_currents(::CCCS) = 1 # i1 = Iout
+current_names(::CCCS) = (:Iout,)
 
-function stamp(element::CCCS, ::Any)
+function stamp(element::CCCS{T}, ::Any) where {T}
     G = element.value
-    A = [
+    A = T[
         0  0  0  0 +1 / G;
         0  0  0  0 +1;
         0  0  0  0 -1;
         0  0  0  0 -1 / G;
         +1  0  0 -1  0
     ]
-    b = zeros(5)
+    b = zeros(T, 5)
 
     return A, b
 end
 
 """
-    CCVS{T} <: AbstractControlledSource{T}
+    CCVS <: AbstractControlledSource
 
 Current-controlled voltage source `Uout = G Iin`.
 Current unknown `Iin` is measured through into node 1 and out of node 4. `Uout` is generated across node 2 to node 3.
 Current unknown `Iout` flows into node 2 and out of node 3.
 """
-struct CCVS{T} <: AbstractControlledSource{T}
+struct CCVS{T} <: AbstractControlledSource{T, 4, 2}
     name::Symbol
     nodes::NTuple{4, Symbol}
     value::T
@@ -227,11 +240,11 @@ struct CCVS{T} <: AbstractControlledSource{T}
     end
 end
 
-num_currents(::CCVS) = 2 # i1 = Iin, i2 = Iout
+current_names(::CCVS) = (:Iin, :Iout)
 
-function stamp(element::CCVS, ::Any)
+function stamp(element::CCVS{T}, ::Any) where {T}
     G = element.value
-    A = [
+    A = T[
         0  0  0  0 +1  0;
         0  0  0  0  0 +1;
         0  0  0  0  0 -1;
@@ -239,7 +252,7 @@ function stamp(element::CCVS, ::Any)
         0 +1 -1  0 -G  0;
         +1  0  0 -1  0  0
     ]
-    b = zeros(6)
+    b = zeros(T, 6)
 
     return A, b
 end
@@ -251,17 +264,16 @@ end
 
 The AbstractAdmittance represents one type of MNA stamp with several convenient subtypes (e.g., resistances, inductances, and capacitances).
 """
-abstract type AbstractAdmittance{T} <: AbstractElement{T} end
-
-num_currents(::AbstractAdmittance) = 0
+abstract type AbstractAdmittance{T} <: AbstractElement{T, 2, 0} end
 
 function stamp(element::AbstractAdmittance, s)
     Y = admittance(element, s)
-    A = [
+    T = typeof(Y)
+    A = T[
         +Y -Y;
         -Y +Y
     ]
-    b = zeros(2)
+    b = zeros(T, 2)
 
     return A, b
 end
@@ -274,7 +286,7 @@ Return the admittance of the element, evaluated at complex frequency `s`.
 function admittance end
 
 """
-    Resistance{T} <: AbstractAdmittance{T}
+    Resistance <: AbstractAdmittance
 
 Element with a real admittance `Y = 1 / R`.
 """
@@ -292,7 +304,7 @@ end
 admittance(element::Resistance, ::Any) = 1 / element.value
 
 """
-    Conductance{T} <: AbstractAdmittance{T}
+    Conductance <: AbstractAdmittance
 
 Element with a real admittance `Y = G`.
 """
@@ -310,7 +322,7 @@ end
 admittance(element::Conductance, ::Any) = element.value
 
 """
-    Inductance{T} <: AbstractAdmittance{T}
+    Inductance <: AbstractAdmittance
 
 Element with a complex admittance `Y = 1 / sL`.
 """
@@ -328,7 +340,7 @@ end
 admittance(element::Inductance, s::Any) = 1 / (s * element.value)
 
 """
-    Capacitance{T} <: AbstractAdmittance{T}
+    Capacitance <: AbstractAdmittance
 
 Element with a complex admittance `Y = sC`.
 """
@@ -346,7 +358,7 @@ end
 admittance(element::Capacitance, s::Any) = s * element.value
 
 """
-    Impedance{T} <: AbstractAdmittance{T}
+    Impedance <: AbstractAdmittance
 
 Element with a complex admittance `Y = 1 / Z`.
 """
@@ -364,7 +376,7 @@ end
 admittance(element::Impedance, ::Any) = 1 / element.value
 
 """
-    Admittance{T} <: AbstractAdmittance{T}
+    Admittance <: AbstractAdmittance
 
 Element with a complex admittance `Y`.
 """
@@ -396,13 +408,13 @@ ShortCircuit(name, nodes) = VoltageSource(name, nodes, 0)
 
 ## Four-port elements
 """
-    Transformer{T} <: AbstractElement{T}
+    Transformer <: AbstractElement
 
-Ideal transformer with turns ratio `T:1`. 
+Ideal transformer with turns ratio `n:1`. 
 Winding 1 at nodes 1-4, winding 2 at nodes 2-3.
-Current unknown `It` flows into node 1 and out of node 4. The secondary current `T It` flows out of node 2 and into node 3.
+Current unknown `It` flows into node 1 and out of node 4. The secondary current `n It` flows out of node 2 and into node 3.
 """
-struct Transformer{T} <: AbstractElement{T}
+struct Transformer{T} <: AbstractElement{T, 4, 1}
     name::Symbol
     nodes::NTuple{4, Symbol}
     value::T
@@ -413,24 +425,24 @@ struct Transformer{T} <: AbstractElement{T}
     end
 end
 
-num_currents(::Transformer) = 1 # i1 = It
+current_names(::Transformer) = (:It,)
 
-function stamp(element::Transformer, ::Any)
-    T = element.value
-    A = [
+function stamp(element::Transformer{T}, ::Any) where {T}
+    n = element.value
+    A = T[
         0  0  0  0 +1;
-        0  0  0  0 -T;
-        0  0  0  0 +T;
+        0  0  0  0 -n;
+        0  0  0  0 +n;
         0  0  0  0 -1;
-        +1 -T +T -1  0
+        +1 -n +n -1  0
     ]
-    b = zeros(5)
+    b = zeros(T, 5)
 
     return A, b
 end
 
 """
-    Gyrator{T} <: AbstractElement{T}
+    Gyrator <: AbstractElement
 
 Ideal gyrator with ratio `R`.
 ```
@@ -440,7 +452,7 @@ Iout = -1/R * (V1 - V4)
 Current unknown `Iin` flows into node 1 and out of node 4.
 Current unknown `Iout` flows into node 2 and out of node 3.
 """
-struct Gyrator{T} <: AbstractElement{T}
+struct Gyrator{T} <: AbstractElement{T, 4, 2}
     name::Symbol
     nodes::NTuple{4, Symbol}
     value::T
@@ -451,11 +463,11 @@ struct Gyrator{T} <: AbstractElement{T}
     end
 end
 
-num_currents(::Gyrator) = 2 # i1 = Iin, i2 = Iout
+current_names(::Gyrator) = (:Iin, :Iout)
 
-function stamp(element::Gyrator, ::Any)
+function stamp(element::Gyrator{T}, ::Any) where {T}
     R = element.value
-    A = [
+    A = T[
         0  0  0  0 +1  0;
         0  0  0  0  0 +1;
         0  0  0  0  0 -1;
@@ -463,7 +475,7 @@ function stamp(element::Gyrator, ::Any)
         0 +1 -1  0 -R  0;
         +1  0  0 -1  0  R;
     ]
-    b = zeros(6)
+    b = zeros(T, 6)
 
     return A, b
 end
