@@ -6,7 +6,7 @@ using Symbolics
 using MNA
 
 @variables R1 R2
-@variables Vi s
+@variables Vi
 
 elements = [
     VoltageSource(:V1, ("Vin", 0), Vi),
@@ -15,7 +15,7 @@ elements = [
 ]
 
 circuit = Circuit(elements)
-A, b = assemble(circuit, s)
+A, b = assemble(circuit, 0; var_type = Num)
 
 H = transfer_function(A, b, circuit, "Vin", "Vout")
 H = simplify(H, expand = true)

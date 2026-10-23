@@ -1,13 +1,14 @@
 """
-    assemble(circuit::Circuit, s::Any)
+    assemble(circuit::Circuit, s::Any; var_type = typeof(s))
 
 Assemble the system matrix `[A]{u} = {b}` at complex frequency `s`.
+The matrices' element type is `var_type`, which is the same as `s` by default and can be changed manually.
 """
-function assemble(circuit::Circuit, s::Any)
+function assemble(circuit::Circuit, s::Any; var_type = typeof(s))
     N = size(circuit)
 
-    A = zeros(typeof(s), N, N)
-    b = zeros(typeof(s), N)
+    A = zeros(var_type, N, N)
+    b = zeros(var_type, N)
 
     for element in circuit.elements
         A_, b_ = stamp(element, s)

@@ -5,7 +5,7 @@ circuits = ["circuit1", "circuit2"]
         include("circuits/$name.jl")
 
         A, b = assemble(circuit, 0.0)
-        
+
         @test size(A) == (expected_size, expected_size)
         @test size(b) == (expected_size,)
 

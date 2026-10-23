@@ -6,7 +6,7 @@ using Symbolics
 export CurrentSource, VoltageSource, VCCS, VCVS, CCCS, CCVS
 export Resistance, Conductance, Impedance, Admittance, Inductance, Capacitance
 export OpenCircuit, ShortCircuit
-export Transformer
+export Transformer, Gyrator
 include("elements.jl")
 
 export Circuit

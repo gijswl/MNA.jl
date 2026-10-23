@@ -9,7 +9,7 @@ using MNA
 @variables β rπ
 
 ## Voltage gain
-@variables Vin s
+@variables Vin
 
 elements = [
     VoltageSource(:Vin, ("b", 0), Vin),
@@ -20,7 +20,7 @@ elements = [
 ]
 
 circuit = Circuit(elements)
-A, b = assemble(circuit, s)
+A, b = assemble(circuit, 0; var_type = Num)
 
 gv = transfer_function(A, b, circuit, "b", "c")
 gv = simplify(gv; expand = true)
@@ -42,7 +42,7 @@ elements = [
 ]
 
 circuit = Circuit(elements)
-A, b = assemble(circuit, s)
+A, b = assemble(circuit, 0; var_type = Num)
 
 gi = MNA.cramer_solve(A, b, circuit, "Iout_i1") / -Iin
 gi = simplify(gi; expand = true)
