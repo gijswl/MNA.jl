@@ -1,6 +1,7 @@
 module MNA
 
 using LinearAlgebra
+using StaticArrays
 using Symbolics
 
 export CurrentSource, VoltageSource, VCCS, VCVS, CCCS, CCVS

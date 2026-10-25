@@ -76,11 +76,8 @@ end
 
 function stamp(element::CurrentSource{T}, ::Any) where {T}
     Io = element.value
-    A = zeros(T, 2, 2)
-    b = T[
-        +Io;
-        -Io
-    ]
+    A = @SMatrix zeros(T, 2, 2)
+    b = SVector{2, T}(+Io, -Io)
 
     return A, b
 end
@@ -106,16 +103,12 @@ current_names(::VoltageSource) = (:I,)
 
 function stamp(element::VoltageSource{T}, ::Any) where {T}
     Uo = element.value
-    A = T[
+    A = @SMatrix T[
         0  0 +1;
         0  0 -1;
         +1 -1  0
     ]
-    b = T[
-        0;
-        0;
-        Uo
-    ]
+    b = SVector{3, T}(0, 0, Uo)
 
     return A, b
 end
@@ -142,14 +135,14 @@ current_names(::VCCS) = (:Iout,)
 
 function stamp(element::VCCS{T}, ::Any) where {T}
     G = element.value
-    A = T[
+    A = @SMatrix T[
         0  0  0  0  0;
         0  0  0  0 +1;
         0  0  0  0 -1;
         0  0  0  0  0;
         +1  0  0 -1 -1 / G
     ]
-    b = zeros(T, 5)
+    b = SVector{5, T}(0, 0, 0, 0, 0)
 
     return A, b
 end
@@ -176,14 +169,14 @@ current_names(::VCVS) = (:Iout,)
 
 function stamp(element::VCVS{T}, ::Any) where {T}
     G = element.value
-    A = T[
+    A = @SMatrix T[
         0  0  0  0  0;
         0  0  0  0 +1;
         0  0  0  0 -1;
         0  0  0  0  0;
         +G -1 +1 -G  0
     ]
-    b = zeros(T, 5)
+    b = SVector{5, T}(0, 0, 0, 0, 0)
 
     return A, b
 end
@@ -210,14 +203,14 @@ current_names(::CCCS) = (:Iout,)
 
 function stamp(element::CCCS{T}, ::Any) where {T}
     G = element.value
-    A = T[
+    A = @SMatrix T[
         0  0  0  0 +1 / G;
         0  0  0  0 +1;
         0  0  0  0 -1;
         0  0  0  0 -1 / G;
         +1  0  0 -1  0
     ]
-    b = zeros(T, 5)
+    b = SVector{5, T}(0, 0, 0, 0, 0)
 
     return A, b
 end
@@ -244,7 +237,7 @@ current_names(::CCVS) = (:Iin, :Iout)
 
 function stamp(element::CCVS{T}, ::Any) where {T}
     G = element.value
-    A = T[
+    A = @SMatrix T[
         0  0  0  0 +1  0;
         0  0  0  0  0 +1;
         0  0  0  0  0 -1;
@@ -252,7 +245,7 @@ function stamp(element::CCVS{T}, ::Any) where {T}
         0 +1 -1  0 -G  0;
         +1  0  0 -1  0  0
     ]
-    b = zeros(T, 6)
+    b = SVector{6, T}(0, 0, 0, 0, 0, 0)
 
     return A, b
 end
@@ -269,11 +262,11 @@ abstract type AbstractAdmittance{T} <: AbstractElement{T, 2, 0} end
 function stamp(element::AbstractAdmittance, s)
     Y = admittance(element, s)
     T = typeof(Y)
-    A = T[
+    A = @SMatrix T[
         +Y -Y;
         -Y +Y
     ]
-    b = zeros(T, 2)
+    b = SVector{2, T}(0, 0)
 
     return A, b
 end
@@ -429,14 +422,14 @@ current_names(::Transformer) = (:It,)
 
 function stamp(element::Transformer{T}, ::Any) where {T}
     n = element.value
-    A = T[
+    A = @SMatrix T[
         0  0  0  0 +1;
         0  0  0  0 -n;
         0  0  0  0 +n;
         0  0  0  0 -1;
         +1 -n +n -1  0
     ]
-    b = zeros(T, 5)
+    b = SVector{5, T}(0, 0, 0, 0, 0)
 
     return A, b
 end
@@ -467,7 +460,7 @@ current_names(::Gyrator) = (:Iin, :Iout)
 
 function stamp(element::Gyrator{T}, ::Any) where {T}
     R = element.value
-    A = T[
+    A = @SMatrix T[
         0  0  0  0 +1  0;
         0  0  0  0  0 +1;
         0  0  0  0  0 -1;
@@ -475,7 +468,7 @@ function stamp(element::Gyrator{T}, ::Any) where {T}
         0 +1 -1  0 -R  0;
         +1  0  0 -1  0  R;
     ]
-    b = zeros(T, 6)
+    b = SVector{6, T}(0, 0, 0, 0, 0, 0)
 
     return A, b
 end

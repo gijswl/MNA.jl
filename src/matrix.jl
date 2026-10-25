@@ -3,41 +3,45 @@
 
 Assemble the system matrix `[A]{u} = {b}` at complex frequency `s`.
 """
-function assemble(circuit::Circuit, s::S) where {S}
+function assemble(circuit::Circuit{T}, s::S) where {T, S}
+    # Determine system matrix size and type
     N = size(circuit)
+    M = promote_type(T, S)
 
-    T = promote_type(map(valuetype, circuit.elements)...)
-    T = promote_type(T, S)
-    A = zeros(T, N, N)
-    b = zeros(T, N)
+    # Initialize system matrix
+    A = zeros(M, N, N)
+    b = zeros(M, N)
 
-    for element in circuit.elements
-        A_, b_ = stamp(element, s)
-
-        # Translate unknown names to indices of the system matrix
-        unames = collect(element.nodes)
-        for current_name in current_names(element)
-            push!(unames, Symbol(element.name, "_", current_name))
-        end
-        idx = get_unknown_idx(circuit, unames)
-
-        # Handle the ground node by discarding all matrix entries assigned to position 0.
-        nonzeros = idx .> 0
-        idx = idx[nonzeros]
-        A_ = A_[nonzeros, nonzeros]
-        b_ = b_[nonzeros]
-
-        # Add element-wise to avoid issues with duplicate indices.
-        #  e.g., the contribution of a resistance connected with both pins to the same node should cancel.
-        for (i, x) in enumerate(idx)
-            for (j, y) in enumerate(idx)
-                A[x, y] += A_[i, j]
-            end
-            b[x] += b_[i]
-        end
+    # Element assembly
+    for ie in elements(circuit)
+        assemble_element!(A, b, ie, s)
     end
 
     return A, b
+end
+
+"""
+    assemble_element!(A, b, ie::IndexedElement, s)
+
+Type-stable element assembly sub-routine.
+"""
+@inline function assemble_element!(A, b, ie::IndexedElement{E, N}, s) where {E, N}
+    A_, b_ = stamp(ie.element, s)
+    idx = ie.index
+
+    # Add element-wise to avoid issues with duplicate indices.
+    #  e.g., the contribution of a resistance connected with both pins to the same node should cancel.
+    for (i, x) in enumerate(idx)
+        x == 0 && continue # Discard the row if it is assigned to node 0 (global ground)
+
+        b[x] += b_[i]
+        for (j, y) in enumerate(idx)
+            y == 0 && continue # Discard the column if it is assigned to node 0 (global ground)
+
+            A[x, y] += A_[i, j]
+        end
+    end
+    return
 end
 
 """
